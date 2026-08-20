@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpi-backend-gateway
+      - uses: actions/checkout@v4
+        with:
+          repository: MercadoFabio/tpi-backend-bff
+          path: tpi-backend-bff
+      - uses: actions/checkout@v4
+        with:
+          repository: MercadoFabio/tpi-backend-usuarios
+          path: tpi-backend-usuarios
+      - uses: actions/checkout@v4
+        with:
+          repository: MercadoFabio/tpi-backend-productos
+          path: tpi-backend-productos
+      - name: Build gateway image
+        working-directory: tpi-backend-gateway
+        run: docker build -t tpi-backend-gateway .
+      - name: Validate nginx config
+        working-directory: tpi-backend-gateway
+        run: docker run --rm -v "$PWD/nginx.conf:/etc/nginx/nginx.conf:ro" nginx:1.27-alpine nginx -t
+      - name: Validate docker compose
+        working-directory: tpi-backend-gateway
+        run: docker compose config

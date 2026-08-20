@@ -1,0 +1,33 @@
+services:
+  gateway:
+    build:
+      context: .
+    ports:
+      - "80:80"
+    depends_on:
+      - bff
+
+  bff:
+    build:
+      context: ../tpi-backend-bff
+    environment:
+      USERS_SERVICE_URL: http://usuarios-service:8081
+      PRODUCTS_SERVICE_URL: http://productos-service:8082
+      ALLOWED_ORIGINS: http://localhost:4200,http://localhost:4300,http://localhost
+    expose:
+      - "8080"
+    depends_on:
+      - usuarios-service
+      - productos-service
+
+  usuarios-service:
+    build:
+      context: ../tpi-backend-usuarios
+    expose:
+      - "8081"
+
+  productos-service:
+    build:
+      context: ../tpi-backend-productos
+    expose:
+      - "8082"
