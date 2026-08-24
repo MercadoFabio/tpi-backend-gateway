@@ -1,6 +1,6 @@
-# tpi-backend-gateway
+# TPI · Caso 1 · Shell SSR + bibliotecas
 
-Gateway Nginx para publicar el backend compartido del demo TPI.
+Gateway Nginx para el caso de una sola aplicación SSR: el Shell renderiza en el servidor y carga bibliotecas de funcionalidad publicadas. El navegador conoce un único origen: este gateway.
 
 ## Layout esperado
 
@@ -8,42 +8,43 @@ Clonar los cuatro repositorios como hermanos dentro de `D:\Facultad\ejemplo-tpi-
 
 ```text
 ejemplo-tpi-backend/
-├── tpi-backend-gateway/
-├── tpi-backend-bff/
-├── tpi-backend-usuarios/
-└── tpi-backend-productos/
+├── tpi-backend-gateway-main/
+├── tpi-demo-shell-main/
+├── tpi-backend-bff-main/
+├── tpi-backend-usuarios-main/
+└── tpi-backend-productos-main/
 ```
 
 ## Servicios y puertos
 
-- `gateway`: host `8081` -> contenedor `80`
+- `gateway`: host `8081` -> contenedor `80`; publica UI SSR y API
+- `shell-ssr`: interno `4000`
 - `bff`: interno `8080`
 - `usuarios-service`: interno `8081`
 - `productos-service`: interno `8082`
 
-## Separacion con el gateway frontend
+## Contrato público
 
-Este repo backend usa `http://localhost:8081` para no chocar con el repo frontend `tpi-multirepo-gateway`, que sigue usando `http://localhost:80`.
-
-- Frontend gateway existente: `http://localhost`
-- Backend gateway de este repo: `http://localhost:8081`
-
-Si los frontends consumen el backend directamente, la base URL recomendada pasa a ser `http://localhost:8081/api`.
+- UI SSR: `http://localhost:8081/`
+- BFF: solo `/api/v1/*`; no se publica CORS.
+- Login: `POST /api/v1/auth/login`; logout: `POST /api/v1/auth/logout`.
+- El gateway limita intentos de login, no reintenta escrituras y responde sin caché.
+- `/internal` y `/actuator` se rechazan. Los microservicios solo se ven dentro de Docker.
 
 ## Levantar todo
 
 Desde este repo:
 
 ```bash
+export DEMO_LOGIN_EMAIL='docente@example.test'
+# Export DEMO_LOGIN_PASSWORD, USERS_DB_PASSWORD and PRODUCTS_DB_PASSWORD from a local secret manager or the current shell.
 docker compose up --build
 ```
 
 ## Endpoints
 
 - `GET http://localhost:8081/health`
-- `GET http://localhost:8081/api/usuarios`
-- `GET http://localhost:8081/api/usuarios/1`
-- `GET http://localhost:8081/api/productos`
-- `GET http://localhost:8081/api/overview`
-
-Nginx preserva el prefijo `/api/` y resuelve el servicio `bff` por DNS interno de Docker para tolerar recreaciones de contenedores.
+- `POST http://localhost:8081/api/v1/auth/login`
+- `GET http://localhost:8081/api/v1/usuarios`
+- `GET http://localhost:8081/api/v1/productos`
+- `GET http://localhost:8081/api/v1/overview`
