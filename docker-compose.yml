@@ -5,16 +5,16 @@ services:
     ports:
       - "8081:80"
     depends_on:
-      - shell-ssr
+      - shell
       - bff
 
-  shell-ssr:
+  shell:
     build:
       context: ..
       dockerfile: tpi-demo-shell/Dockerfile
       target: runtime
     expose:
-      - "4000"
+      - "80"
 
   bff:
     build:
